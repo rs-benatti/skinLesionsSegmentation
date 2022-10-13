@@ -1,11 +1,12 @@
 #%%
 from PIL import Image
 from skimage import feature
-from skimage import data
 from matplotlib import pyplot as plt
 import numpy as np
 
 def lpb_test(img, r, num):
+    img = img.astype(float)
+    img = img[:,:,0] * 0.3 + img[:,:,1]*0.59 + img[:,:,2]*0.11
 
     img = img.astype(np.uint8)
 
@@ -20,14 +21,14 @@ def lpb_test(img, r, num):
 
 #%%
 METHOD = 'uniform'
-im = data.camera()
-dado = np.asarray(im)
+im = Image.open('src\images\melanoma\ISIC_0000030.jpg')
+data = np.asarray(im)
 
-r = 0.5
-num = 5 * r
+r = 4
+num = 20 * r
 
 #%%
-lbp = lpb_test(dado, r, num)
+lbp = lpb_test(data, r, num)
 
 plt.imshow(lbp/np.max(lbp), cmap='gray')
 plt.show()
