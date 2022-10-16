@@ -69,8 +69,7 @@ def main_task(img_array, img_index, lesion_type):
     Y, gaussian_lbp = LBP_processing.gaussian_lbp(img_array[img_index], r, num)
     lab_image = space_transformation.lab_color_space(Y, gaussian_lbp)
     clustered = kmeans.kmeans(kmeans.cluster(kmeans.kmeans_colors(lab_image, 2)), 2)
-    clustered = resize(clustered, (clustered.shape[0] // 3, clustered.shape[1] // 3)) # Aapagr essa linha pra usar imagem inteira
-    clustered = clustering.create_mask(clustered, thresh=0.89, rayon=22, x0=clustered.shape[1]//2, y0=clustered.shape[1]//2)
+    clustered = clustering.create_mask(clustered, thresh=0.89, rayon=50, x0=clustered.shape[1]//2, y0=clustered.shape[1]//2)
     io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
 
 if __name__ == "__main__":
