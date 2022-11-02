@@ -13,13 +13,16 @@ import space_transformation
 import clustering
 
 # This function returns a list of io images from the group passed as parameter ('melanoma' or 'nevus')
-def retrieve_images(lesion_type): # Parameter: 'melanoma' or 'nevus'
+def retrieve_images(lesion_type, resized = 1): # Parameter: 'melanoma' or 'nevus'
     im = []
     for f in os.listdir('./src/images/' + lesion_type):
         name, extension = os.path.splitext(f)
         try:
             id = str(re.findall("(\d+)$", name)[0])
-            im.append(io.imread('src\images\\' + lesion_type + '\ISIC_'+id+'.jpg'))
+            image = io.imread('src\images\\' + lesion_type + '\ISIC_'+id+'.jpg')
+            if (resized):
+                image = resize(image, image.shape[0] // 3, image.shape[1] //3)
+            im.append(image)
         except:
             pass
     return im
@@ -81,10 +84,7 @@ def main_task(img_array, img_index, lesion_type):
     # It is evident that this is not optimal, we must try to apply the kmeans algorithm only one time.
     clustered = kmeans.kmeans(kmeans.cluster(kmeans.kmeans_colors(lab_image, 2)), 2)
 
-    # The commented line below was being used to reduce the size of the image.
-    # Professor Pietro confirmed that there was no problem about it.
-
-    #clustered = clustering.create_mask(clustered, thresh=0.89, rayon=50, x0=clustered.shape[1]//2, y0=clustered.shape[1]//2)
+    clustered = clustering.create_mask(clustered, thresh=0.89, rayon=50, x0=clustered.shape[1]//2, y0=clustered.shape[1]//2)
 
     # The line below is used to save the images inside the folder ./out
     io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
