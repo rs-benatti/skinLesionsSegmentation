@@ -1,5 +1,8 @@
 #%%
-
+'''
+    This file is used only for testing code snippets, it's not relevant to the final software files.
+    This file can be ignored and is not meant to be understood.
+'''
 from skimage import feature
 from skimage import filters
 from matplotlib import pyplot as plt
