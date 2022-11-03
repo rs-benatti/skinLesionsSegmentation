@@ -5,11 +5,14 @@
 ## Introduction
 For now we will just use the README as a TODO list for this project
 
+###. -1 Change kemans for thresholding
+Get a percentage of the darkest points and choosing the most central one as threshold.
+
 ### 0. Finish border remotion
 
 ### 1. Hair removal
 
-### 2. Create google colab folder
+### 2. Create google colab file
 This step is meant to use a jupyter notebook on goolge colab so we can improve the exposition of our results and code.
 
 ### 3. Create methods to compare to label masks

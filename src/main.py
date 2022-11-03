@@ -95,5 +95,6 @@ def main_task(img_array, img_index, lesion_type):
     # The line below is used to save the images inside the folder ./out
     io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
     print(f'Saved image with id: {id[img_index]}')
+
 if __name__ == "__main__":
     main()
