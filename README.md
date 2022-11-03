@@ -5,7 +5,7 @@
 ## Introduction
 For now we will just use the README as a TODO list for this project
 
-###. -1 Change kemans for thresholding
+### -1 Change kemans for thresholding
 Get a percentage of the darkest points and choosing the most central one as threshold.
 
 ### 0. Finish border remotion
