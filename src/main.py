@@ -11,6 +11,11 @@ import LBP_processing
 import kmeans
 import space_transformation
 import clustering
+import  LAB_thresholding
+import corner_removal
+
+# Obs.: corner_removal is not perfect yet, it doesn't work with lesions in skins with a lot of hair.
+# This only happens in nevus images, after adding the hair removal we will need to test it again
 
 # This function returns a list of io images from the group passed as parameter ('melanoma' or 'nevus')
 def retrieve_images(lesion_type): # Parameter: 'melanoma' or 'nevus'
@@ -53,7 +58,8 @@ def get_id_list(lesion_type): # 'melanoma' or 'nevus'
 def main():
     
     im = retrieve_images('melanoma')
-    main_task(im, 1, 'melanoma')
+    im = corner_removal.retrieve_no_corner_images(im)
+    main_task(im, 0, 'melanoma')
 
     '''
     processlist = []
@@ -77,24 +83,45 @@ def main_task(img_array, img_index, lesion_type):
 
     # This implementation returns the Y scale of the original image without the application of a gaussian filter and
     # the image itself after a LBP, binarization and application of a gaussian filter
-    Y, gaussian_lbp = LBP_processing.gaussian_lbp(img_array[img_index], r, num)
+    im = img_array[img_index]
+    Y, gaussian_lbp = LBP_processing.gaussian_lbp(im, r, num)
 
     # This function returns the LBP treated image in a LAB color space
     lab_image = space_transformation.lab_color_space(Y, gaussian_lbp)
 
+    '''
     # This fucntion returns the image after the application of kmeans.
     # It is evident that this is not optimal, we must try to apply the kmeans algorithm only one time.
     clustered = kmeans.kmeans(kmeans.cluster(kmeans.kmeans_colors(lab_image, 2)), 2)
+    '''
+
+    #The application of kmeans is substituted by a thresholding method
+
+    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.68)
+    binary = lab_image[:, :, 0] > threshold
 
     resizingFactor = 3 # to don't resize, use 1
-    clustered = resize(clustered, (clustered.shape[0]//resizingFactor, clustered.shape[1]//resizingFactor))
-    plt.imshow(clustered, cmap='gray')
+    binary = resize(binary, (binary.shape[0]//resizingFactor, binary.shape[1]//resizingFactor))
+    plt.imshow(binary, cmap='gray')
     plt.show()
-    clustered = clustering.create_mask(clustered, thresh=0.91, rayon=50//(resizingFactor), show_clustering=1)
-
+    clustered = clustering.create_mask(binary, thresh=2, rayon=100//(resizingFactor), show_clustering=1) 
+    
+    im = resize(im, (im.shape[0]//resizingFactor, im.shape[1]//resizingFactor))
+    plt.figure('superposition')
+    plt.imshow(im, cmap='gray') # I would add interpolation='none'
+    plt.imshow(clustered, cmap='jet', alpha=0.5) # interpolation='none'
+    plt.show()
     # The line below is used to save the images inside the folder ./out
     io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
     print(f'Saved image with id: {id[img_index]}')
 
 if __name__ == "__main__":
     main()
+    '''
+    img = retrieve_images('melanoma')
+    img = corner_removal.retrieve_no_corner_images(img)
+    for im in img:
+        plt.imshow(im)
+        plt.show()
+    '''
+    
