@@ -59,7 +59,7 @@ def main():
     
     im = retrieve_images('melanoma')
     im = corner_removal.retrieve_no_corner_images(im)
-    main_task(im, 0, 'melanoma')
+    main_task(im, 2, 'melanoma')
 
     '''
     processlist = []
@@ -97,14 +97,14 @@ def main_task(img_array, img_index, lesion_type):
 
     #The application of kmeans is substituted by a thresholding method
 
-    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.68)
+    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.2)
     binary = lab_image[:, :, 0] > threshold
 
     resizingFactor = 3 # to don't resize, use 1
     binary = resize(binary, (binary.shape[0]//resizingFactor, binary.shape[1]//resizingFactor))
     plt.imshow(binary, cmap='gray')
     plt.show()
-    clustered = clustering.create_mask(binary, thresh=2, rayon=100//(resizingFactor), show_clustering=1) 
+    clustered = clustering.create_mask(binary, thresh=0.91, rayon=50//(resizingFactor), show_clustering=1) 
     
     im = resize(im, (im.shape[0]//resizingFactor, im.shape[1]//resizingFactor))
     plt.figure('superposition')
