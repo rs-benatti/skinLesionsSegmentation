@@ -23,7 +23,7 @@ def get_last_dark_pixel(img):
         if pixel < threshold:
             largest_j = j
         
-    return (int(0.2*largest_j), int(0.8*largest_i))
+    return (int(0.1*largest_j), int(0.7*largest_i))
 
 def crop_image(im, corner):
     # (x0, y0)            (x0, y1)
@@ -35,11 +35,19 @@ def crop_image(im, corner):
     #       *            *
     #       *            *
     #       **************
-    # (x1, y0)            (x1, y1)              
-    x0 = corner[0]
-    y0 = corner[1] 
-    x1 = len(im[:, 0]) - x0
-    y1 = len(im[0, :]) - y0
+    # (x1, y0)            (x1, y1)
+
+    # Some paddling:
+    if corner[0] < 30:
+        x0 = 40
+        y0 = 40
+        x1 = len(im[:, 0]) - x0
+        y1 = len(im[0, :]) - y0
+    else:
+        x0 = corner[0]
+        y0 = corner[1] 
+        x1 = len(im[:, 0]) - x0
+        y1 = len(im[0, :]) - y0
     im = im[x0:x1, y0:y1]
     return im
 

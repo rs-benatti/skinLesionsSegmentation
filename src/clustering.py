@@ -15,7 +15,7 @@ def create_mask(im, thresh=0.85, rayon=9, show_clustering=0):
     m0 = im[:, :].max()
     iterCounter = 0
     rayon_temp = rayon // 4
-    while ((m0 > (0.4 * im[:, :].max()) or s0 == 0) or np.isnan(m0) == True):
+    while ((m0 > (0.6 * im[:, :].max()) or s0 == 0) or np.isnan(m0) == True):
         center = get_center_pixel(im)
         x0 = center[0]
         y0 = center[1]

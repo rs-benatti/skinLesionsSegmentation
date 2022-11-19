@@ -1,18 +1,22 @@
-from skimage import io
-from matplotlib import pyplot as plt
-import numpy as np
-from skimage.transform import resize
-from multiprocessing import Process
-
 import os
 import re
+from multiprocessing import Process
+import scipy
+import cv2
 
-import LBP_processing
-import kmeans
-import space_transformation
+import numpy as np
+from matplotlib import pyplot as plt
+from skimage import io
+from skimage.transform import resize
+
 import clustering
-import  LAB_thresholding
 import corner_removal
+import kmeans
+import LAB_thresholding
+import LBP_processing
+import space_transformation
+import morphological_operation
+import CCL
 
 # Obs.: corner_removal is not perfect yet, it doesn't work with lesions in skins with a lot of hair.
 # This only happens in nevus images, after adding the hair removal we will need to test it again
@@ -55,11 +59,16 @@ def get_id_list(lesion_type): # 'melanoma' or 'nevus'
 
 
 # This is the main function.
+plot = 0
 def main():
     
     im = retrieve_images('melanoma')
     im = corner_removal.retrieve_no_corner_images(im)
-    main_task(im, 2, 'melanoma')
+    #main_task(im, 9, 'melanoma')
+
+    for index in range(0, len(im)):
+        main_task(im, index, 'melanoma')
+
 
     '''
     processlist = []
@@ -97,23 +106,56 @@ def main_task(img_array, img_index, lesion_type):
 
     #The application of kmeans is substituted by a thresholding method
 
-    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.2)
+    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.5)
     binary = lab_image[:, :, 0] > threshold
 
-    resizingFactor = 3 # to don't resize, use 1
+    resizingFactor = 5 # to don't resize, use 1
     binary = resize(binary, (binary.shape[0]//resizingFactor, binary.shape[1]//resizingFactor))
-    plt.imshow(binary, cmap='gray')
-    plt.show()
-    clustered = clustering.create_mask(binary, thresh=0.91, rayon=50//(resizingFactor), show_clustering=1) 
+    #binary = CCL.CCL(binary)
+    if plot == 1:
+        plt.imshow(binary, cmap='gray')
+        plt.show()
+    #plt.show()
+   # clustered = clustering.create_mask(binary, thresh=1, rayon=200//(resizingFactor), show_clustering=1) 
+    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, opening_kernel)
+    clustered = 1-scipy.ndimage.binary_fill_holes(binary)
+    #opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
+    clustered = clustered.astype('uint8')
+    #clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
+    if plot == 1:
+        plt.imshow(clustered, cmap='gray')
+        plt.show()
+    #plt.show()
+    clustered = cv2.morphologyEx(clustered, cv2.MORPH_CLOSE, kernel)
+    
+    if plot == 1:
+        plt.imshow(clustered, cmap='gray')
+        plt.show()
+    #plt.show()
+    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (70,70))
+    clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
+    clustered = CCL.CCL(clustered)
+    if plot == 1:
+        plt.imshow(clustered, cmap='gray')
+        plt.show()
+    plt.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered, cmap='gray')
+    print(f'Saved image with id: {id[img_index]}')
+    #plt.show()
     
     im = resize(im, (im.shape[0]//resizingFactor, im.shape[1]//resizingFactor))
-    plt.figure('superposition')
-    plt.imshow(im, cmap='gray') # I would add interpolation='none'
-    plt.imshow(clustered, cmap='jet', alpha=0.5) # interpolation='none'
-    plt.show()
+    #plt.figure('superposition')
+    if plot == 1:
+        plt.imshow(im, cmap='gray') # I would add interpolation='none'
+        plt.show()
+    if plot == 1:
+        plt.imshow(clustered, cmap='jet', alpha=0.5) # interpolation='none'
+        plt.show()
+    #plt.show()
     # The line below is used to save the images inside the folder ./out
-    io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
-    print(f'Saved image with id: {id[img_index]}')
+    #io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
+    #print(f'Saved image with id: {id[img_index]}')
 
 if __name__ == "__main__":
     main()
