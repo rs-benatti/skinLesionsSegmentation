@@ -11,6 +11,7 @@ import LBP_processing
 import kmeans
 import space_transformation
 import clustering
+import Hair_removal
 
 # This function returns a list of io images from the group passed as parameter ('melanoma' or 'nevus')
 def retrieve_images(lesion_type): # Parameter: 'melanoma' or 'nevus'
@@ -53,6 +54,7 @@ def get_id_list(lesion_type): # 'melanoma' or 'nevus'
 def main():
     
     im = retrieve_images('melanoma')
+    im = Hair_removal.remove_all(im)
     main_task(im, 1, 'melanoma')
 
     '''
