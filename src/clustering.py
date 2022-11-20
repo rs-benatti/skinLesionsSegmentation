@@ -14,13 +14,14 @@ def my_perimeter(im):
 def create_mask(im, thresh=0.85, rayon=9, show_clustering=0):
     m0 = im[:, :].max()
     iterCounter = 0
-    while ((m0 > (0.2 * im[:, :].max()) or s0 == 0) or np.isnan(m0) == True):
+    rayon_temp = rayon // 4
+    while ((m0 > (0.6 * im[:, :].max()) or s0 == 0) or np.isnan(m0) == True):
         center = get_center_pixel(im)
         x0 = center[0]
         y0 = center[1]
         mask=np.zeros((len(im[0]),len(im[1])))
         mask[y0,x0]=255
-        ext=im[y0-rayon:y0+rayon+1,x0-rayon:x0+rayon+1]
+        ext=im[y0-rayon_temp:y0+rayon_temp+1,x0-rayon_temp:x0+rayon_temp+1]
         m0=np.mean(ext)
         s0=np.std(ext)
         if iterCounter > 1000:
@@ -29,7 +30,7 @@ def create_mask(im, thresh=0.85, rayon=9, show_clustering=0):
             y0 = im.shape[0] // 2
             mask=np.zeros((len(im[0]),len(im[1])))
             mask[y0,x0]=255
-            ext=im[y0-rayon:y0+rayon+1,x0-rayon:x0+rayon+1]
+            ext=im[y0-rayon_temp:y0+rayon_temp+1,x0-rayon_temp:x0+rayon_temp+1]
             m0=np.mean(ext)
             s0=np.std(ext)
             print(m0)
@@ -38,6 +39,11 @@ def create_mask(im, thresh=0.85, rayon=9, show_clustering=0):
         print(m0)
         print(s0)
         iterCounter += 1
+    mask=np.zeros((len(im[0]),len(im[1])))
+    mask[y0,x0]=255
+    ext=im[y0-rayon:y0+rayon+1,x0-rayon:x0+rayon+1]
+    m0=np.mean(ext)
+    s0=np.std(ext)
     modif=1
     iter = 0 
     while modif >  0:
