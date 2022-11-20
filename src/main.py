@@ -1,17 +1,30 @@
-from skimage import io
-from matplotlib import pyplot as plt
-import numpy as np
-from skimage.transform import resize
-from multiprocessing import Process
-
 import os
 import re
+from multiprocessing import Process
+import scipy
+import cv2
 
-import LBP_processing
+import numpy as np
+from matplotlib import pyplot as plt
+from skimage import io
+from skimage.transform import resize
+
+import clustering
+import corner_removal
 import kmeans
+import LAB_thresholding
+import LBP_processing
 import space_transformation
 import clustering
 import Hair_removal
+import morphological_operation
+import CCL
+
+
+
+# Obs.: corner_removal is not perfect yet, it doesn't work with lesions in skins with a lot of hair.
+# This only happens in nevus images, after adding the hair removal we will need to test it again
+>>>>>>> src/main.py
 
 # This function returns a list of io images from the group passed as parameter ('melanoma' or 'nevus')
 def retrieve_images(lesion_type): # Parameter: 'melanoma' or 'nevus'
@@ -51,11 +64,19 @@ def get_id_list(lesion_type): # 'melanoma' or 'nevus'
 
 
 # This is the main function.
+plot = 0
 def main():
     
     im = retrieve_images('melanoma')
     im = Hair_removal.remove_all(im)
+    im = corner_removal.retrieve_no_corner_images(im)
+    #main_task(im, 9, 'melanoma')
     main_task(im, 1, 'melanoma')
+
+    for index in range(0, len(im)):
+        main_task(im, index, 'melanoma')
+
+>>>>>>> src/main.py
 
     '''
     processlist = []
@@ -79,24 +100,78 @@ def main_task(img_array, img_index, lesion_type):
 
     # This implementation returns the Y scale of the original image without the application of a gaussian filter and
     # the image itself after a LBP, binarization and application of a gaussian filter
-    Y, gaussian_lbp = LBP_processing.gaussian_lbp(img_array[img_index], r, num)
+    im = img_array[img_index]
+    Y, gaussian_lbp = LBP_processing.gaussian_lbp(im, r, num)
 
     # This function returns the LBP treated image in a LAB color space
     lab_image = space_transformation.lab_color_space(Y, gaussian_lbp)
 
+    '''
     # This fucntion returns the image after the application of kmeans.
     # It is evident that this is not optimal, we must try to apply the kmeans algorithm only one time.
     clustered = kmeans.kmeans(kmeans.cluster(kmeans.kmeans_colors(lab_image, 2)), 2)
+    '''
 
-    resizingFactor = 3 # to don't resize, use 1
-    clustered = resize(clustered, (clustered.shape[0]//resizingFactor, clustered.shape[1]//resizingFactor))
-    plt.imshow(clustered, cmap='gray')
-    plt.show()
-    clustered = clustering.create_mask(clustered, thresh=0.91, rayon=50//(resizingFactor), show_clustering=1)
+    #The application of kmeans is substituted by a thresholding method
 
-    # The line below is used to save the images inside the folder ./out
-    io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
+    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.5)
+    binary = lab_image[:, :, 0] > threshold
+
+    resizingFactor = 5 # to don't resize, use 1
+    binary = resize(binary, (binary.shape[0]//resizingFactor, binary.shape[1]//resizingFactor))
+    #binary = CCL.CCL(binary)
+    if plot == 1:
+        plt.imshow(binary, cmap='gray')
+        plt.show()
+    #plt.show()
+   # clustered = clustering.create_mask(binary, thresh=1, rayon=200//(resizingFactor), show_clustering=1) 
+    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, opening_kernel)
+    clustered = 1-scipy.ndimage.binary_fill_holes(binary)
+    #opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
+    clustered = clustered.astype('uint8')
+    #clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
+    if plot == 1:
+        plt.imshow(clustered, cmap='gray')
+        plt.show()
+    #plt.show()
+    clustered = cv2.morphologyEx(clustered, cv2.MORPH_CLOSE, kernel)
+    
+    if plot == 1:
+        plt.imshow(clustered, cmap='gray')
+        plt.show()
+    #plt.show()
+    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (70,70))
+    clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
+    clustered = CCL.CCL(clustered)
+    if plot == 1:
+        plt.imshow(clustered, cmap='gray')
+        plt.show()
+    plt.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered, cmap='gray')
     print(f'Saved image with id: {id[img_index]}')
+    #plt.show()
+    
+    im = resize(im, (im.shape[0]//resizingFactor, im.shape[1]//resizingFactor))
+    #plt.figure('superposition')
+    if plot == 1:
+        plt.imshow(im, cmap='gray') # I would add interpolation='none'
+        plt.show()
+    if plot == 1:
+        plt.imshow(clustered, cmap='jet', alpha=0.5) # interpolation='none'
+        plt.show()
+    #plt.show()
+    # The line below is used to save the images inside the folder ./out
+    #io.imsave('out/'+ lesion_type + '/mask_' + id[img_index] + '.png', clustered)
+    #print(f'Saved image with id: {id[img_index]}')
 
 if __name__ == "__main__":
     main()
+    '''
+    img = retrieve_images('melanoma')
+    img = corner_removal.retrieve_no_corner_images(img)
+    for im in img:
+        plt.imshow(im)
+        plt.show()
+    '''
+    
