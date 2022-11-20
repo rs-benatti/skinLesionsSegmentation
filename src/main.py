@@ -124,13 +124,17 @@ def main_task(img_array, img_index, lesion_type):
         plt.show()
     #plt.show()
    # clustered = clustering.create_mask(binary, thresh=1, rayon=200//(resizingFactor), show_clustering=1) 
-    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7)) # (10, 10) for melanoma
-    
+    if (lesion_type == 'nevus'):
+        opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
+    else:
+        opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
     clustered = cv2.morphologyEx(binary, cv2.MORPH_OPEN, opening_kernel)
     #clustered = 1-scipy.ndimage.binary_fill_holes(clustered)
     clustered = 1-clustered
-    #opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10)) # (7, 7)
+    if (lesion_type == 'nevus'):
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
+    else:
+        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
     clustered = clustered.astype('uint8')
     #clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
     if plot == 1:
@@ -145,7 +149,10 @@ def main_task(img_array, img_index, lesion_type):
         plt.title("After closing")
         plt.show()
     #plt.show()
-    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (40,40))
+    if (lesion_type == 'nevus'):
+        opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (40,40))
+    else:
+        opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (70,70))
     clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
     #clustered = CCL.CCL(clustered)
     if plot == 1:
