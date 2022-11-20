@@ -15,11 +15,16 @@ import kmeans
 import LAB_thresholding
 import LBP_processing
 import space_transformation
+import clustering
+import Hair_removal
 import morphological_operation
 import CCL
 
+
+
 # Obs.: corner_removal is not perfect yet, it doesn't work with lesions in skins with a lot of hair.
 # This only happens in nevus images, after adding the hair removal we will need to test it again
+>>>>>>> src/main.py
 
 # This function returns a list of io images from the group passed as parameter ('melanoma' or 'nevus')
 def retrieve_images(lesion_type): # Parameter: 'melanoma' or 'nevus'
@@ -63,12 +68,15 @@ plot = 0
 def main():
     
     im = retrieve_images('melanoma')
+    im = Hair_removal.remove_all(im)
     im = corner_removal.retrieve_no_corner_images(im)
     #main_task(im, 9, 'melanoma')
+    main_task(im, 1, 'melanoma')
 
     for index in range(0, len(im)):
         main_task(im, index, 'melanoma')
 
+>>>>>>> src/main.py
 
     '''
     processlist = []
