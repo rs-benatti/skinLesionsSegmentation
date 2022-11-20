@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-
+paddling = 10
 def get_last_dark_pixel(img):
      # Obs.: Essa função tá retornando valores invertidos em relação ao esperado pela descrição dada nos artigos
     # De acordo com os artigos, dentro da lesão deveríamos ter mais 1s e fora mais 0s
@@ -9,7 +9,7 @@ def get_last_dark_pixel(img):
     #img = img[:,:,0] * 0.3 + img[:,:,1]*0.59 + img[:,:,2]*0.11
     # Ajustando pra valores da referência [6] do paper:
     img = img[:, :, 0] * 0.2989 + img[:, :, 1] * 0.5870 + img[:, :, 2] * 0.1140
-    paddling = 30
+    
     largest_i = -1
     threshold = 100
     for i in range(0, int(len(img[paddling, :])/2)):
@@ -23,7 +23,7 @@ def get_last_dark_pixel(img):
         if pixel < threshold:
             largest_j = j
         
-    return (int(0.1*largest_j), int(0.7*largest_i))
+    return (int(0.1*largest_j), int(0.8*largest_i))
 
 def crop_image(im, corner):
     # (x0, y0)            (x0, y1)
@@ -38,9 +38,9 @@ def crop_image(im, corner):
     # (x1, y0)            (x1, y1)
 
     # Some paddling:
-    if corner[0] < 30:
-        x0 = 40
-        y0 = 40
+    if corner[0] < paddling:
+        x0 = paddling * 2
+        y0 = paddling
         x1 = len(im[:, 0]) - x0
         y1 = len(im[0, :]) - y0
     else:

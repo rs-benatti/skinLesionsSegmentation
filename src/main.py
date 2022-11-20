@@ -17,14 +17,11 @@ import LBP_processing
 import space_transformation
 import clustering
 import Hair_removal
-import morphological_operation
 import CCL
-
-
 
 # Obs.: corner_removal is not perfect yet, it doesn't work with lesions in skins with a lot of hair.
 # This only happens in nevus images, after adding the hair removal we will need to test it again
->>>>>>> src/main.py
+
 
 # This function returns a list of io images from the group passed as parameter ('melanoma' or 'nevus')
 def retrieve_images(lesion_type): # Parameter: 'melanoma' or 'nevus'
@@ -66,17 +63,18 @@ def get_id_list(lesion_type): # 'melanoma' or 'nevus'
 # This is the main function.
 plot = 0
 def main():
-    
-    im = retrieve_images('melanoma')
+    type = 'melanoma'
+    im = retrieve_images(type)
     im = Hair_removal.remove_all(im)
     im = corner_removal.retrieve_no_corner_images(im)
+    plt.imshow(im[9])
+    plt.show()
     #main_task(im, 9, 'melanoma')
-    main_task(im, 1, 'melanoma')
-
+    main_task(im, 9, type)
+    
     for index in range(0, len(im)):
-        main_task(im, index, 'melanoma')
-
->>>>>>> src/main.py
+        main_task(im, index, type)
+    
 
     '''
     processlist = []
@@ -114,10 +112,11 @@ def main_task(img_array, img_index, lesion_type):
 
     #The application of kmeans is substituted by a thresholding method
 
-    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.5)
+    threshold = LAB_thresholding.get_l_threshold(lab_image, 0.45) # 0.5
     binary = lab_image[:, :, 0] > threshold
-
-    resizingFactor = 5 # to don't resize, use 1
+    if (lesion_type == 'nevus' and img_index != 4):
+        binary = kmeans.kmeans(kmeans.cluster(kmeans.kmeans_colors(lab_image, 2)), 2)
+    resizingFactor = 1 # to don't resize, use 1
     binary = resize(binary, (binary.shape[0]//resizingFactor, binary.shape[1]//resizingFactor))
     #binary = CCL.CCL(binary)
     if plot == 1:
@@ -125,26 +124,30 @@ def main_task(img_array, img_index, lesion_type):
         plt.show()
     #plt.show()
    # clustered = clustering.create_mask(binary, thresh=1, rayon=200//(resizingFactor), show_clustering=1) 
-    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
-    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, opening_kernel)
-    clustered = 1-scipy.ndimage.binary_fill_holes(binary)
+    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7)) # (10, 10) for melanoma
+    
+    clustered = cv2.morphologyEx(binary, cv2.MORPH_OPEN, opening_kernel)
+    #clustered = 1-scipy.ndimage.binary_fill_holes(clustered)
+    clustered = 1-clustered
     #opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10))
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (7,7))
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (10,10)) # (7, 7)
     clustered = clustered.astype('uint8')
     #clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
     if plot == 1:
         plt.imshow(clustered, cmap='gray')
+        plt.title("Before closing")
         plt.show()
     #plt.show()
     clustered = cv2.morphologyEx(clustered, cv2.MORPH_CLOSE, kernel)
     
     if plot == 1:
         plt.imshow(clustered, cmap='gray')
+        plt.title("After closing")
         plt.show()
     #plt.show()
-    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (70,70))
+    opening_kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (40,40))
     clustered = cv2.morphologyEx(clustered, cv2.MORPH_OPEN, opening_kernel)
-    clustered = CCL.CCL(clustered)
+    #clustered = CCL.CCL(clustered)
     if plot == 1:
         plt.imshow(clustered, cmap='gray')
         plt.show()
@@ -154,11 +157,11 @@ def main_task(img_array, img_index, lesion_type):
     
     im = resize(im, (im.shape[0]//resizingFactor, im.shape[1]//resizingFactor))
     #plt.figure('superposition')
+    
+    plt.imshow(im, cmap='gray') # I would add interpolation='none'
+    plt.imshow(clustered, cmap='jet', alpha=0.5) # interpolation='none'
+    plt.savefig('out/'+ lesion_type + '/mask_' + id[img_index] + '_superposition.png')
     if plot == 1:
-        plt.imshow(im, cmap='gray') # I would add interpolation='none'
-        plt.show()
-    if plot == 1:
-        plt.imshow(clustered, cmap='jet', alpha=0.5) # interpolation='none'
         plt.show()
     #plt.show()
     # The line below is used to save the images inside the folder ./out
