@@ -61,21 +61,15 @@ def get_id_list(lesion_type): # 'melanoma' or 'nevus'
 
 
 # This is the main function.
-plot = 0
+plot = 1
 def main():
-    type = 'melanoma'
+    type = 'nevus'
     im = retrieve_images(type)
     im = Hair_removal.remove_all(im)
     im = corner_removal.retrieve_no_corner_images(im)
-    plt.imshow(im[9])
-    plt.show()
-    #main_task(im, 9, 'melanoma')
-    main_task(im, 9, type)
     
     for index in range(0, len(im)):
         main_task(im, index, type)
-    
-
     '''
     processlist = []
 
@@ -142,7 +136,7 @@ def main_task(img_array, img_index, lesion_type):
         plt.title("Before closing")
         plt.show()
     #plt.show()
-    clustered = cv2.morphologyEx(clustered, cv2.MORPH_CLOSE, kernel)
+    #clustered = cv2.morphologyEx(clustered, cv2.MORPH_CLOSE, kernel)
     
     if plot == 1:
         plt.imshow(clustered, cmap='gray')
